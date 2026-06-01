@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
   <style>
     :root{color-scheme:light}*{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;background:#F8FAFC;color:#1E293B;padding:16px}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;background:#F8FAFC;color:#1E293B;padding:16px}
     .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
     .header h1{font-size:18px;font-weight:700;color:#0F172A}
     .date{font-size:12px;color:#64748B;margin-bottom:3px}
@@ -26,11 +26,10 @@
     .chart-title{font-size:13px;font-weight:600;color:#374151;margin-bottom:10px}
     @media(min-width:640px){
       body{padding:24px;max-width:900px;margin:0 auto}
-      .header h1{font-size:20px}.date{font-size:13px}.updated{font-size:12px;margin-bottom:20px}
-      .cards{gap:14px;margin-bottom:20px}.card{padding:18px}
-      .card h3{font-size:13px;min-height:40px;margin-bottom:14px}
+      .header h1{font-size:20px}.cards{gap:14px;margin-bottom:20px}
+      .card{padding:18px}.card h3{font-size:13px;min-height:40px;margin-bottom:14px}
       .stat{padding:10px 4px}.stat .label{font-size:10px}.stat .value{font-size:18px}
-      .expiry,.no-expiry{font-size:11px}.chart-section{padding:20px}.chart-title{font-size:14px;margin-bottom:14px}
+      .chart-section{padding:20px}
     }
   </style>
 </head>
@@ -45,34 +44,34 @@
   </div>
   <script>
     // __DATA_START__
-    var HISTORY = [{"date": "2026-06-01", "items": [{"it_id": "202846000011", "item_name": "[\\uBC15\\uC57D\\uB2E4\\uC2DD] D\\ub97c \\ub2f4\\ub2e4 \\ucd94\\uc5b4\\ube14 2000IU", "\\uc7ac\\uace0\\uc218\\ub7c9": 3481, "\\uac00\\uc6a9\\uc218\\ub7c9": 3468, "\\ud560\\ub2f9\\uc218\\ub7c9": 13, "\\uc720\\ud1b5\\uae30\\ud55c": "2028-03-08"}, {"it_id": "202846000078", "item_name": "[\\uBC15\\uC57D\\uB2E4\\uC2DD] \\uc624\\ub298\\ub3c4 \\ub9d1\\uc544\\uc5f0", "\\uc7ac\\uace0\\uc218\\ub7c9": 22, "\\uac00\\uc6a9\\uc218\\ub7c9": 22, "\\ud560\\ub2f9\\uc218\\ub7c9": 0, "\\uc720\\ud1b5\\uae30\\ud55c": "2028-04-05"}, {"it_id": "201068000139", "item_name": "(\\uc0ac\\uc740\\ud488) [\\uBC15\\uC57D\\uB2E4\\uC2DD] \\ub9ac\\ud50c\\ub7bf", "\\uc7ac\\uace0\\uc218\\ub7c9": 3837, "\\uac00\\uc6a9\\uc218\\ub7c9": 3831, "\\ud560\\ub2f9\\uc218\\ub7c9": 6, "\\uc720\\ud1b5\\uae30\\ud55c": ""}, {"it_id": "202846000079", "item_name": "(\\uc0ac\\uc740\\ud488) \\ud558\\ud53c\\ub3c4\\ud53c \\ud328\\uce58 \\ud074\\ub9ac\\uc5b4", "\\uc7ac\\uace0\\uc218\\ub7c9": 24, "\\uac00\\uc6a9\\uc218\\ub7c9": 24, "\\ud560\\ub2f9\\uc218\\ub7c9": 0, "\\uc720\\ud1b5\\uae30\\ud55c": "2028-09-23"}]}];
+    var HISTORY = [{"date": "2026-06-01", "items": [{"it_id": "202846000011", "item_name": "[박약다식] D를 담다 츄어블 2000IU", "재고수량": 3481, "가용수량": 3468, "할당수량": 13, "유통기한": "2028-03-08"}, {"it_id": "202846000078", "item_name": "[박약다식] 오늘도 맑아연", "재고수량": 22, "가용수량": 22, "할당수량": 0, "유통기한": "2028-04-05"}, {"it_id": "201068000139", "item_name": "(사은품) [박약다식] 리플랫", "재고수량": 3837, "가용수량": 3831, "할당수량": 6, "유통기한": ""}, {"it_id": "202846000079", "item_name": "(사은품) 하피도피 패치 클리어", "재고수량": 24, "가용수량": 24, "할당수량": 0, "유통기한": "2028-09-23"}]}];
     // __DATA_END__
-    var COLORS={'202846000011':'#3B82F6','202846000078':'#10B981','201068000139':'#F59E0B','202846000079':'#EF4444'};
+    var COLORS={"202846000011":"#3B82F6","202846000078":"#10B981","201068000139":"#F59E0B","202846000079":"#EF4444"};
     var latest=HISTORY[HISTORY.length-1];
-    document.getElementById('date').textContent=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
-    document.getElementById('updated').textContent='기준일: '+latest.date;
-    document.getElementById('cards').innerHTML=latest.items.map(function(item){
-      var hasExpiry=item['유통기한']&&item['유통기한']!=='0000-00-00';
-      return '<div class="card"><h3>'+item.item_name+'</h3><div class="stats">'+
-        '<div class="stat"><span class="label">재고</span><span class="value stock">'+Number(item['재고수량']).toLocaleString()+'</span></div>'+
-        '<div class="stat"><span class="label">가용</span><span class="value available">'+Number(item['가용수량']).toLocaleString()+'</span></div>'+
-        '<div class="stat"><span class="label">할당</span><span class="value assigned">'+Number(item['할당수량']).toLocaleString()+'</span></div>'+
-        '</div>'+(hasExpiry?'<div class="expiry">📅 '+item['유통기한']+'</div>':'<div class="no-expiry">유통기한 없음</div>')+'</div>';
-    }).join('');
+    document.getElementById("date").textContent=new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+    document.getElementById("updated").textContent="기준일: "+latest.date;
+    document.getElementById("cards").innerHTML=latest.items.map(function(item){
+      var hasExpiry=item["유통기한"]&&item["유통기한"]!=="0000-00-00";
+      return "<div class=\"card\"><h3>"+item.item_name+"</h3><div class=\"stats\">"+
+        "<div class=\"stat\"><span class=\"label\">재고</span><span class=\"value stock\">"+Number(item["재고수량"]).toLocaleString()+"</span></div>"+
+        "<div class=\"stat\"><span class=\"label\">가용</span><span class=\"value available\">"+Number(item["가용수량"]).toLocaleString()+"</span></div>"+
+        "<div class=\"stat\"><span class=\"label\">할당</span><span class=\"value assigned\">"+Number(item["할당수량"]).toLocaleString()+"</span></div>"+
+        "</div>"+(hasExpiry?"<div class=\"expiry\">📅 "+item["유통기한"]+"</div>":"<div class=\"no-expiry\">유통기한 없음</div>")+"</div>";
+    }).join("");
     var isMobile=window.innerWidth<640;
-    new Chart(document.getElementById('historyChart').getContext('2d'),{
-      type:'line',
+    new Chart(document.getElementById("historyChart").getContext("2d"),{
+      type:"line",
       data:{
         labels:HISTORY.map(function(d){return d.date;}),
         datasets:latest.items.map(function(p){
-          return {
-            label:p.item_name.replace(/\(\uc0ac\uc740\ud488\)\s*/g,'').replace(/[\[\]]/g,'').substring(0,isMobile?12:20),
-            data:HISTORY.map(function(d){var i=d.items.find(function(x){return x.it_id===p.it_id;});return i?i['재고수량']:null;}),
-            borderColor:COLORS[p.it_id]||'#6B7280',backgroundColor:'transparent',tension:0.3,pointRadius:isMobile?3:4
+          return{
+            label:p.item_name.replace(/\(사은품\)\s*/g,"").replace(/[\[\]]/g,"").substring(0,isMobile?12:20),
+            data:HISTORY.map(function(d){var i=d.items.find(function(x){return x.it_id===p.it_id;});return i?i["재고수량"]:null;}),
+            borderColor:COLORS[p.it_id]||"#6B7280",backgroundColor:"transparent",tension:0.3,pointRadius:isMobile?3:4
           };
         })
       },
-      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:isMobile?9:11},boxWidth:10,padding:isMobile?8:12}}},scales:{x:{ticks:{font:{size:isMobile?9:11},maxRotation:45}},y:{beginAtZero:false,ticks:{font:{size:isMobile?9:11},callback:function(v){return v.toLocaleString();}}}}}
+      options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:isMobile?9:11},boxWidth:10}}},scales:{x:{ticks:{font:{size:isMobile?9:11}}},y:{beginAtZero:false,ticks:{font:{size:isMobile?9:11},callback:function(v){return v.toLocaleString();}}}}}
     });
   </script>
 </body>
