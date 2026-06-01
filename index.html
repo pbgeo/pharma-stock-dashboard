@@ -8,89 +8,113 @@
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
       background: #F8FAFC;
       color: #1E293B;
-      padding: 24px;
+      padding: 16px;
     }
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
-    .header h1 { font-size: 20px; font-weight: 700; color: #0F172A; }
-    .date { font-size: 13px; color: #64748B; margin-bottom: 6px; }
-    .updated { font-size: 12px; color: #94A3B8; margin-bottom: 20px; }
+    .header h1 { font-size: 18px; font-weight: 700; color: #0F172A; }
+    .date { font-size: 12px; color: #64748B; margin-bottom: 3px; }
+    .updated { font-size: 11px; color: #94A3B8; margin-bottom: 16px; }
+
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 14px;
-      margin-bottom: 24px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
     }
+
     .card {
       background: white;
       border-radius: 12px;
-      padding: 18px;
+      padding: 14px 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.07);
       border: 1px solid #E2E8F0;
     }
     .card h3 {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
       color: #374151;
-      margin-bottom: 14px;
-      line-height: 1.5;
-      min-height: 40px;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      min-height: 32px;
     }
-    .stats { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stats { display: flex; gap: 5px; margin-bottom: 8px; }
     .stat {
       flex: 1;
       text-align: center;
       background: #F8FAFC;
-      border-radius: 8px;
-      padding: 10px 4px;
+      border-radius: 6px;
+      padding: 7px 2px;
     }
-    .stat .label { display: block; font-size: 10px; color: #94A3B8; margin-bottom: 4px; }
-    .stat .value { display: block; font-size: 18px; font-weight: 700; }
+    .stat .label { display: block; font-size: 9px; color: #94A3B8; margin-bottom: 2px; }
+    .stat .value { display: block; font-size: 15px; font-weight: 700; }
     .stock { color: #1E40AF; }
     .available { color: #059669; }
     .assigned { color: #D97706; }
     .expiry {
-      font-size: 11px;
+      font-size: 10px;
       color: #92400E;
       background: #FEF3C7;
-      padding: 4px 8px;
+      padding: 3px 6px;
       border-radius: 4px;
       display: inline-block;
     }
-    .no-expiry { font-size: 11px; color: #9CA3AF; }
+    .no-expiry { font-size: 10px; color: #9CA3AF; }
+
     .chart-section {
       background: white;
       border-radius: 12px;
-      padding: 20px;
+      padding: 14px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.07);
       border: 1px solid #E2E8F0;
     }
-    .chart-title { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 14px; }
-    .error { text-align: center; padding: 60px; color: #94A3B8; }
+    .chart-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+
+    .error { text-align: center; padding: 40px; color: #94A3B8; grid-column: 1/-1; }
+
+    /* 데스크탑 */
+    @media (min-width: 640px) {
+      body { padding: 24px; max-width: 900px; margin: 0 auto; }
+      .header h1 { font-size: 20px; }
+      .date { font-size: 13px; }
+      .updated { font-size: 12px; margin-bottom: 20px; }
+      .cards { grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+      .card { padding: 18px; }
+      .card h3 { font-size: 13px; min-height: 40px; margin-bottom: 14px; }
+      .stat { padding: 10px 4px; }
+      .stat .label { font-size: 10px; }
+      .stat .value { font-size: 18px; }
+      .expiry { font-size: 11px; }
+      .no-expiry { font-size: 11px; }
+      .chart-section { padding: 20px; }
+      .chart-title { font-size: 14px; margin-bottom: 14px; }
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>📦 박약다식 재고 현황</h1>
+    <h1>📦 박약다식 재고</h1>
   </div>
   <div class="date" id="date"></div>
   <div class="updated" id="updated"></div>
 
   <div class="cards" id="cards">
-    <div class="error">데이터 불러오는 중...</div>
+    <div class="error">불러오는 중...</div>
   </div>
 
   <div class="chart-section">
     <div class="chart-title">재고수량 추이</div>
-    <canvas id="historyChart" height="100"></canvas>
+    <canvas id="historyChart"></canvas>
   </div>
 
   <script>
@@ -122,7 +146,7 @@
               </div>
             </div>
             ${hasExpiry
-              ? `<div class="expiry">📅 유통기한 ${item.유통기한}</div>`
+              ? `<div class="expiry">📅 ${item.유통기한}</div>`
               : `<div class="no-expiry">유통기한 없음</div>`}
           </div>`;
       }).join('');
@@ -131,15 +155,16 @@
     let myChart = null;
     function renderChart(history) {
       if (!history.length) return;
+      const isMobile = window.innerWidth < 640;
       const labels = history.map(d => d.date);
       const products = history[history.length - 1].items;
       const datasets = products.map(p => ({
-        label: p.item_name.replace(/\(사은품\)\s*/g, '').replace(/[\[\]]/g, '').substring(0, 20),
+        label: p.item_name.replace(/\(사은품\)\s*/g, '').replace(/[\[\]]/g, '').substring(0, isMobile ? 12 : 20),
         data: history.map(d => d.items.find(i => i.it_id === p.it_id)?.재고수량 ?? null),
         borderColor: COLORS[p.it_id] || '#6B7280',
         backgroundColor: 'transparent',
         tension: 0.3,
-        pointRadius: 4
+        pointRadius: isMobile ? 3 : 4
       }));
       if (myChart) myChart.destroy();
       myChart = new Chart(document.getElementById('historyChart').getContext('2d'), {
@@ -147,32 +172,10 @@
         data: { labels, datasets },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } },
-          scales: { y: { beginAtZero: false, ticks: { callback: v => v.toLocaleString() } } }
-        }
-      });
-    }
-
-    async function init() {
-      document.getElementById('date').textContent = new Date().toLocaleDateString('ko-KR', {
-        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
-      });
-
-      try {
-        const res = await fetch('./data.json?t=' + Date.now());
-        const history = await res.json();
-        const latest = history[history.length - 1];
-        if (latest) {
-          renderCards(latest.items);
-          document.getElementById('updated').textContent = '최근 업데이트: ' + latest.date;
-        }
-        renderChart(history);
-      } catch (e) {
-        document.getElementById('cards').innerHTML = '<div class="error">데이터를 불러올 수 없습니다.</div>';
-      }
-    }
-
-    init();
-  </script>
-</body>
-</html>
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { size: isMobile ? 9 : 11 }, boxWidth: 10, padding: isMobile ? 8 : 12 }
+            }
+          },
+          scales: {
