@@ -2,8 +2,8 @@ name: 박약다식 재고 업데이트
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 매일 15:00 KST (06:00 UTC)
-  workflow_dispatch:        # 수동 실행 버튼
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -28,6 +28,14 @@ jobs:
           WMS_ID: ${{ secrets.WMS_ID }}
           WMS_PW: ${{ secrets.WMS_PW }}
         run: node scraper.js > data_today.json
+
+      - name: 디버그 스크린샷 저장
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-screenshots
+          path: debug_*.png
+          if-no-files-found: ignore
 
       - name: index.html 업데이트
         run: python3 update_data.py
