@@ -7,22 +7,16 @@ async function main() {
   try {
     await page.goto('https://mate.ourbox.co.kr/login', { waitUntil: 'networkidle', timeout: 30000 });
 
-    // OMS 탭 클릭
+    // OMS 탭 클릭 (login_kind 변경)
     await page.click('text=OMS');
     await page.waitForTimeout(1000);
 
-    // ID 입력 (name으로 특정)
-    await page.click('input[name="mb_id"]');
-    await page.type('input[name="mb_id"]', process.env.WMS_ID, { delay: 50 });
-
-    // PW 입력 (name으로 특정, type으로 키보드 입력)
-    await page.click('input[name="mb_password"]');
-    await page.type('input[name="mb_password"]', process.env.WMS_PW, { delay: 50 });
-
-    await page.waitForTimeout(500);
-
-    // 로그인 버튼 (input[type="submit"])
-    await page.click('input[type="submit"]');
+    // JS로 폼 값 설정 및 submit (React state 우회)
+    await page.evaluate((id, pw) => {
+      document.querySelector('input[name="mb_id"]').value = id;
+      document.querySelector('input[name="mb_password"]').value = pw;
+      document.querySelector('form').submit();
+    }, process.env.WMS_ID, process.env.WMS_PW);
 
     // 로그인 완료 대기
     await page.waitForURL('**/main', { timeout: 20000 });
