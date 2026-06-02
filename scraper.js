@@ -1,41 +1,12 @@
 const { chromium } = require('playwright');
 const { execSync } = require('child_process');
+const path = require('path');
 
 async function main() {
-  // Python requests로 로그인 → 세션 쿠키 획득
-  const pythonScript = `
-import requests, os, json, re, sys
-
-s = requests.Session()
-s.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36'
-
-r = s.get('https://mate.ourbox.co.kr/login')
-csrf = re.search(r'name="login_csrf_token"[^>]*value="([^"]+)"', r.text)
-if not csrf:
-    print("CSRF 토큰 없음", file=sys.stderr)
-    sys.exit(1)
-
-r2 = s.post('https://mate.ourbox.co.kr/login/login', data={
-    'login_csrf_token': csrf.group(1),
-    'login_kind': 'reseller',
-    'mb_id': os.environ['WMS_ID'],
-    'mb_password': os.environ['WMS_PW']
-}, allow_redirects=True)
-
-print("로그인 후 URL:", r2.url, file=sys.stderr)
-print("상태코드:", r2.status_code, file=sys.stderr)
-
-if 'main' not in r2.url:
-    print("로그인 실패", file=sys.stderr)
-    sys.exit(1)
-
-cookies = [{'name': c.name, 'value': c.value, 'domain': 'mate.ourbox.co.kr', 'path': '/'} for c in s.cookies]
-print(json.dumps(cookies))
-`;
-
-  const cookiesJson = execSync(`python3 -c "${pythonScript.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, {
+  const cookiesJson = execSync('python3 login.py', {
     env: process.env,
-    encoding: 'utf8'
+    encoding: 'utf8',
+    cwd: path.dirname(process.argv[1])
   }).trim();
 
   const cookies = JSON.parse(cookiesJson);
@@ -49,7 +20,6 @@ print(json.dumps(cookies))
   try {
     await page.goto('https://mate.ourbox.co.kr/mate/page/wms_stock', { waitUntil: 'networkidle', timeout: 30000 });
     await page.waitForTimeout(3000);
-
     await page.waitForFunction(() =>
       window.grid?.modelManager?.dataModel?.models?.length > 0
     , { timeout: 30000 });
