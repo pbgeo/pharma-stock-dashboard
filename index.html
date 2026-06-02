@@ -71,7 +71,7 @@
           };
         })
       },
-      options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:isMobile?9:11},boxWidth:10}}},scales:{x:{ticks:{font:{size:isMobile?9:11}}},y:{beginAtZero:false,ticks:{font:{size:isMobile?9:11},callback:function(v){return v.toLocaleString();}}}}}
+      options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:isMobile?9:11},boxWidth:10}}},scales:{x:{ticks:{font:{size:isMobile?9:11}}},y:{beginAtZero:true,max:10000,ticks:{stepSize:1000,font:{size:isMobile?9:11},callback:function(v){return v.toLocaleString();}}}}}
     });
   </script>
 </body>
