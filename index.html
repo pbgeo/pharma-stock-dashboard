@@ -10,8 +10,11 @@
     body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;background:#F8FAFC;color:#1E293B;padding:16px}
     .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
     .header h1{font-size:18px;font-weight:700;color:#0F172A}
+    .btn{padding:6px 12px;background:#3B82F6;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit}
+    .btn:hover{background:#2563EB}
     .date{font-size:12px;color:#64748B;margin-bottom:3px}
     .updated{font-size:11px;color:#94A3B8;margin-bottom:16px}
+    .status{font-size:11px;margin-bottom:12px;min-height:16px}
     .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
     .card{background:white;border-radius:12px;padding:14px 12px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #E2E8F0}
     .card h3{font-size:11px;font-weight:600;color:#374151;margin-bottom:10px;line-height:1.4;min-height:32px}
@@ -24,55 +27,148 @@
     .no-expiry{font-size:10px;color:#9CA3AF}
     .chart-section{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #E2E8F0}
     .chart-title{font-size:13px;font-weight:600;color:#374151;margin-bottom:10px}
+    .error{grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8}
     @media(min-width:640px){
       body{padding:24px;max-width:900px;margin:0 auto}
       .header h1{font-size:20px}.cards{gap:14px;margin-bottom:20px}
       .card{padding:18px}.card h3{font-size:13px;min-height:40px;margin-bottom:14px}
       .stat{padding:10px 4px}.stat .label{font-size:10px}.stat .value{font-size:18px}
-      .chart-section{padding:20px}
+      .expiry,.no-expiry{font-size:11px}.chart-section{padding:20px}
     }
   </style>
 </head>
 <body>
-  <div class="header"><h1>📦 박약다식 재고</h1></div>
+  <div class="header">
+    <h1>📦 박약다식 재고</h1>
+    <button class="btn" id="refresh" onclick="init()">🔄 새로고침</button>
+  </div>
   <div class="date" id="date"></div>
   <div class="updated" id="updated"></div>
-  <div class="cards" id="cards"></div>
+  <div class="status" id="status"></div>
+  <div class="cards" id="cards"><div class="error">불러오는 중...</div></div>
   <div class="chart-section">
     <div class="chart-title">재고수량 추이</div>
     <canvas id="historyChart"></canvas>
   </div>
+
   <script>
-    // __DATA_START__
-    var HISTORY = [{"date": "2026-06-01", "items": [{"it_id": "202846000011", "item_name": "[박약다식] D를 담다 츄어블 2000IU", "재고수량": 3481, "가용수량": 3468, "할당수량": 13, "유통기한": "2028-03-08"}, {"it_id": "202846000078", "item_name": "[박약다식] 오늘도 맑아연", "재고수량": 22, "가용수량": 22, "할당수량": 0, "유통기한": "2028-04-05"}, {"it_id": "201068000139", "item_name": "(사은품) [박약다식] 리플랫", "재고수량": 3837, "가용수량": 3831, "할당수량": 6, "유통기한": ""}, {"it_id": "202846000079", "item_name": "(사은품) 하피도피 패치 클리어", "재고수량": 24, "가용수량": 24, "할당수량": 0, "유통기한": "2028-09-23"}]}, {"date": "2026-06-02", "items": [{"it_id": "201068000139", "item_name": "(사은품) [박약다식] 리플랫", "재고수량": 3831, "가용수량": 3831, "할당수량": 0, "유통기한": "0000-00-00"}, {"it_id": "202846000079", "item_name": "(사은품) 하피도피 패치 클리어", "재고수량": 24, "가용수량": 24, "할당수량": 0, "유통기한": "2028-09-23"}, {"it_id": "202846000011", "item_name": "[박약다식] D를 담다 츄어블 2000IU", "재고수량": 3468, "가용수량": 3468, "할당수량": 0, "유통기한": "2028-03-08"}, {"it_id": "202846000078", "item_name": "[박약다식] 오늘도 맑아연", "재고수량": 22, "가용수량": 22, "할당수량": 0, "유통기한": "2028-04-05"}]}];
-    // __DATA_END__
-    var COLORS={"202846000011":"#3B82F6","202846000078":"#10B981","201068000139":"#F59E0B","202846000079":"#EF4444"};
-    var latest=HISTORY[HISTORY.length-1];
-    document.getElementById("date").textContent=new Date().toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
-    document.getElementById("updated").textContent="기준일: "+latest.date;
-    document.getElementById("cards").innerHTML=latest.items.map(function(item){
-      var hasExpiry=item["유통기한"]&&item["유통기한"]!=="0000-00-00";
-      return "<div class=\"card\"><h3>"+item.item_name+"</h3><div class=\"stats\">"+
-        "<div class=\"stat\"><span class=\"label\">재고</span><span class=\"value stock\">"+Number(item["재고수량"]).toLocaleString()+"</span></div>"+
-        "<div class=\"stat\"><span class=\"label\">가용</span><span class=\"value available\">"+Number(item["가용수량"]).toLocaleString()+"</span></div>"+
-        "<div class=\"stat\"><span class=\"label\">할당</span><span class=\"value assigned\">"+Number(item["할당수량"]).toLocaleString()+"</span></div>"+
-        "</div>"+(hasExpiry?"<div class=\"expiry\">📅 "+item["유통기한"]+"</div>":"<div class=\"no-expiry\">유통기한 없음</div>")+"</div>";
-    }).join("");
-    var isMobile=window.innerWidth<640;
-    new Chart(document.getElementById("historyChart").getContext("2d"),{
-      type:"line",
-      data:{
-        labels:HISTORY.map(function(d){return d.date;}),
-        datasets:latest.items.map(function(p){
-          return{
-            label:p.item_name.replace(/\(사은품\)\s*/g,"").replace(/[\[\]]/g,"").substring(0,isMobile?12:20),
-            data:HISTORY.map(function(d){var i=d.items.find(function(x){return x.it_id===p.it_id;});return i?i["재고수량"]:null;}),
-            borderColor:COLORS[p.it_id]||"#6B7280",backgroundColor:"transparent",tension:0.3,pointRadius:isMobile?3:4
-          };
-        })
-      },
-      options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:isMobile?9:11},boxWidth:10}}},scales:{x:{ticks:{font:{size:isMobile?9:11}}},y:{beginAtZero:true,max:10000,ticks:{stepSize:1000,font:{size:isMobile?9:11},callback:function(v){return v.toLocaleString();}}}}}
-    });
+    const SHEET_ID = "1hVQZOo3MYhksqhsE6B4TFYUr997HgiDzo27zKVBNx2I";
+    const GID = "0";
+    const PRODUCTS = [
+      "[박약다식] D를 담다 츄어블 2000IU",
+      "[박약다식] 오늘도 맑아연",
+      "(사은품) [박약다식] 리플랫",
+      "(사은품) 하피도피 패치 클리어"
+    ];
+    const COLORS = ["#3B82F6","#10B981","#F59E0B","#EF4444"];
+    const STORAGE_KEY = "bakyak_v2";
+
+    function getHistory() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    }
+
+    function saveToday(items, updateDate) {
+      const history = getHistory();
+      const idx = history.findIndex(d => d.date === updateDate);
+      const entry = {date: updateDate, items};
+      if (idx >= 0) history[idx] = entry; else history.push(entry);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    }
+
+    function renderCards(items) {
+      document.getElementById("cards").innerHTML = items.map(item => {
+        const hasExpiry = item.유통기한 && item.유통기한 !== "0000-00-00";
+        return `<div class="card">
+          <h3>${item.item_name}</h3>
+          <div class="stats">
+            <div class="stat"><span class="label">재고</span><span class="value stock">${Number(item.재고수량).toLocaleString()}</span></div>
+            <div class="stat"><span class="label">가용</span><span class="value available">${Number(item.가용수량).toLocaleString()}</span></div>
+            <div class="stat"><span class="label">할당</span><span class="value assigned">${Number(item.할당수량).toLocaleString()}</span></div>
+          </div>
+          ${hasExpiry ? `<div class="expiry">📅 ${item.유통기한}</div>` : `<div class="no-expiry">유통기한 없음</div>`}
+        </div>`;
+      }).join("");
+    }
+
+    let myChart = null;
+    function renderChart(history) {
+      if (!history.length) return;
+      const isMobile = window.innerWidth < 640;
+      const labels = history.map(d => d.date);
+      const products = history[history.length-1].items;
+      const datasets = products.map((p,i) => ({
+        label: p.item_name.replace(/\(사은품\)\s*/g,"").replace(/[\[\]]/g,"").substring(0,isMobile?12:20),
+        data: history.map(d => d.items.find(x => x.item_name===p.item_name)?.재고수량 ?? null),
+        borderColor: COLORS[i] || "#6B7280",
+        backgroundColor: "transparent", tension: 0.3, pointRadius: isMobile?3:4
+      }));
+      if (myChart) myChart.destroy();
+      myChart = new Chart(document.getElementById("historyChart").getContext("2d"), {
+        type: "line", data: {labels, datasets},
+        options: {
+          responsive: true,
+          plugins: {legend: {position:"bottom", labels: {font:{size:isMobile?9:11}, boxWidth:10}}},
+          scales: {
+            x: {ticks: {font:{size:isMobile?9:11}, maxRotation:45}},
+            y: {beginAtZero:false, ticks: {font:{size:isMobile?9:11}, callback: v => v.toLocaleString()}}
+          }
+        }
+      });
+    }
+
+    async function fetchSheetData() {
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}&t=${Date.now()}`;
+      const resp = await fetch(url);
+      const text = await resp.text();
+      const rows = text.split("\n").map(r => r.split(",").map(c => c.replace(/^"|"$/g,"").trim()));
+
+      // update 날짜 (row 2, col B)
+      const updateDate = rows[2]?.[1]?.trim() || "";
+
+      // 박약다식 4종 찾기 (품목명 C열 또는 전체에서)
+      const items = [];
+      for (const name of PRODUCTS) {
+        const row = rows.find(r => r.length > 9 && r[2] === name || (name === "(사은품) 하피도피 패치 클리어" && r.join(",").includes("하피도피 패치 클리어")));
+        if (row) {
+          items.push({
+            item_name: row[2],
+            재고수량: parseInt(row[7]) || 0,
+            가용수량: parseInt(row[8]) || 0,
+            할당수량: parseInt(row[9]) || 0,
+            유통기한: row[4] || ""
+          });
+        }
+      }
+
+      return {updateDate, items};
+    }
+
+    async function init() {
+      document.getElementById("date").textContent = new Date().toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric",weekday:"long"});
+
+      // 캐시 먼저 표시
+      const history = getHistory();
+      if (history.length) {
+        renderCards(history[history.length-1].items);
+        renderChart(history);
+      }
+
+      document.getElementById("status").textContent = "🔄 구글시트에서 최신 데이터 불러오는 중...";
+      try {
+        const {updateDate, items} = await fetchSheetData();
+        if (!items.length) throw new Error("데이터 없음");
+
+        saveToday(items, updateDate);
+        renderCards(items);
+        renderChart(getHistory());
+        document.getElementById("updated").textContent = `기준일: ${updateDate}`;
+        document.getElementById("status").textContent = "";
+      } catch(e) {
+        document.getElementById("status").textContent = "⚠️ 로드 실패 — 저장된 데이터 표시 중";
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
