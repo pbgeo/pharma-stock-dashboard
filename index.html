@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>박약다식 재고 현황</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
   <style>
     :root{color-scheme:light}*{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;background:#F8FAFC;color:#1E293B;padding:16px}
@@ -15,7 +14,7 @@
     .date{font-size:12px;color:#64748B;margin-bottom:3px}
     .updated{font-size:11px;color:#94A3B8;margin-bottom:16px}
     .status{font-size:11px;margin-bottom:12px;min-height:16px}
-    .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .card{background:white;border-radius:12px;padding:14px 12px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #E2E8F0}
     .card h3{font-size:11px;font-weight:600;color:#374151;margin-bottom:10px;line-height:1.4;min-height:32px}
     .stats{display:flex;gap:5px;margin-bottom:8px}
@@ -25,31 +24,25 @@
     .stock{color:#1E40AF}.available{color:#059669}.assigned{color:#D97706}
     .expiry{font-size:10px;color:#92400E;background:#FEF3C7;padding:3px 6px;border-radius:4px;display:inline-block}
     .no-expiry{font-size:10px;color:#9CA3AF}
-    .chart-section{background:white;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #E2E8F0}
-    .chart-title{font-size:13px;font-weight:600;color:#374151;margin-bottom:10px}
     .error{grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8}
     @media(min-width:640px){
       body{padding:24px;max-width:900px;margin:0 auto}
-      .header h1{font-size:20px}.cards{gap:14px;margin-bottom:20px}
+      .header h1{font-size:20px}.cards{gap:14px}
       .card{padding:18px}.card h3{font-size:13px;min-height:40px;margin-bottom:14px}
       .stat{padding:10px 4px}.stat .label{font-size:10px}.stat .value{font-size:18px}
-      .expiry,.no-expiry{font-size:11px}.chart-section{padding:20px}
+      .expiry,.no-expiry{font-size:11px}
     }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>📦 박약다식 재고</h1>
-    <button class="btn" id="refresh" onclick="init()">🔄 새로고침</button>
+    <button class="btn" onclick="init()">🔄 새로고침</button>
   </div>
   <div class="date" id="date"></div>
   <div class="updated" id="updated"></div>
   <div class="status" id="status"></div>
   <div class="cards" id="cards"><div class="error">불러오는 중...</div></div>
-  <div class="chart-section">
-    <div class="chart-title">재고수량 추이</div>
-    <canvas id="historyChart"></canvas>
-  </div>
 
   <script>
     const SHEET_ID = "1hVQZOo3MYhksqhsE6B4TFYUr997HgiDzo27zKVBNx2I";
@@ -60,20 +53,6 @@
       "(사은품) [박약다식] 리플랫",
       "(사은품) 하피도피 패치 클리어"
     ];
-    const COLORS = ["#3B82F6","#10B981","#F59E0B","#EF4444"];
-    const STORAGE_KEY = "bakyak_v2";
-
-    function getHistory() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    }
-
-    function saveToday(items, updateDate) {
-      const history = getHistory();
-      const idx = history.findIndex(d => d.date === updateDate);
-      const entry = {date: updateDate, items};
-      if (idx >= 0) history[idx] = entry; else history.push(entry);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    }
 
     function renderCards(items) {
       document.getElementById("cards").innerHTML = items.map(item => {
@@ -90,42 +69,12 @@
       }).join("");
     }
 
-    let myChart = null;
-    function renderChart(history) {
-      if (!history.length) return;
-      const isMobile = window.innerWidth < 640;
-      const labels = history.map(d => d.date);
-      const products = history[history.length-1].items;
-      const datasets = products.map((p,i) => ({
-        label: p.item_name.replace(/\(사은품\)\s*/g,"").replace(/[\[\]]/g,"").substring(0,isMobile?12:20),
-        data: history.map(d => d.items.find(x => x.item_name===p.item_name)?.재고수량 ?? null),
-        borderColor: COLORS[i] || "#6B7280",
-        backgroundColor: "transparent", tension: 0.3, pointRadius: isMobile?3:4
-      }));
-      if (myChart) myChart.destroy();
-      myChart = new Chart(document.getElementById("historyChart").getContext("2d"), {
-        type: "line", data: {labels, datasets},
-        options: {
-          responsive: true,
-          plugins: {legend: {position:"bottom", labels: {font:{size:isMobile?9:11}, boxWidth:10}}},
-          scales: {
-            x: {ticks: {font:{size:isMobile?9:11}, maxRotation:45}},
-            y: {beginAtZero:false, ticks: {font:{size:isMobile?9:11}, callback: v => v.toLocaleString()}}
-          }
-        }
-      });
-    }
-
     async function fetchSheetData() {
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}&t=${Date.now()}`;
       const resp = await fetch(url);
       const text = await resp.text();
       const rows = text.split("\n").map(r => r.split(",").map(c => c.replace(/^"|"$/g,"").trim()));
-
-      // update 날짜 (row 2, col B)
       const updateDate = rows[2]?.[1]?.trim() || "";
-
-      // 박약다식 4종 찾기 (품목명 C열 또는 전체에서)
       const items = [];
       for (const name of PRODUCTS) {
         const row = rows.find(r => r.length > 9 && r[2] === name || (name === "(사은품) 하피도피 패치 클리어" && r.join(",").includes("하피도피 패치 클리어")));
@@ -139,32 +88,21 @@
           });
         }
       }
-
       return {updateDate, items};
     }
 
     async function init() {
       document.getElementById("date").textContent = new Date().toLocaleDateString("ko-KR", {year:"numeric",month:"long",day:"numeric",weekday:"long"});
-
-      // 캐시 먼저 표시
-      const history = getHistory();
-      if (history.length) {
-        renderCards(history[history.length-1].items);
-        renderChart(history);
-      }
-
       document.getElementById("status").textContent = "🔄 구글시트에서 최신 데이터 불러오는 중...";
       try {
         const {updateDate, items} = await fetchSheetData();
         if (!items.length) throw new Error("데이터 없음");
-
-        saveToday(items, updateDate);
         renderCards(items);
-        renderChart(getHistory());
         document.getElementById("updated").textContent = `기준일: ${updateDate}`;
         document.getElementById("status").textContent = "";
       } catch(e) {
-        document.getElementById("status").textContent = "⚠️ 로드 실패 — 저장된 데이터 표시 중";
+        document.getElementById("cards").innerHTML = `<div class="error">⚠️ 데이터를 불러올 수 없습니다</div>`;
+        document.getElementById("status").textContent = "";
       }
     }
 
