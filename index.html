@@ -64,7 +64,7 @@
             <div class="stat"><span class="label">가용</span><span class="value available">${Number(item.가용수량).toLocaleString()}</span></div>
             <div class="stat"><span class="label">할당</span><span class="value assigned">${Number(item.할당수량).toLocaleString()}</span></div>
           </div>
-          ${hasExpiry ? `<div class="expiry">📅 ${item.유통기한}</div>` : `<div class="no-expiry">유통기한 없음</div>`}
+          ${hasExpiry ? `<div class="expiry">📅 소비기한 ${item.유통기한}</div>` : `<div class="no-expiry">유통기한 없음</div>`}
         </div>`;
       }).join("");
     }
